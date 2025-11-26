@@ -1,0 +1,74 @@
+Objectif : Scraper les données du site sky.coflnet.com/flipper pour récupérer les informations des items
+et automatiser un system pour acheter directement des items dans minecraft (hypixel).
+
+Approche initiale :
+
+Utilisation de requests et BeautifulSoup pour scraper le contenu.
+
+Problème rencontré : Le contenu est chargé dynamiquement par JavaScript, rendant cette méthode inefficace.
+
+Approche avec Selenium :
+
+Utilisation de Selenium pour interagir avec la page et exécuter le JavaScript.
+
+Problème rencontré : Malgré l'attente et le défilement, les éléments souhaités ne sont toujours pas trouvés.
+
+Débogage et ajustements :
+
+Ajout de débogages pour afficher le contenu HTML récupéré et vérifier la structure des éléments.
+
+Tentatives avec des sélecteurs CSS et XPath pour cibler les éléments spécifiques.
+
+Problèmes persistants :
+
+Les éléments ne sont toujours pas trouvés, indiquant peut-être un problème avec les sélecteurs utilisés ou le chargement dynamique du contenu.
+
+Dernière tentative avec Puppeteer (Node.js) :
+
+Proposition d'utiliser Puppeteer pour interagir avec la page et récupérer les éléments chargés dynamiquement.
+
+Pour la prochaine fois, nous pourrions :
+
+Revoir les sélecteurs CSS utilisés pour nous assurer qu'ils correspondent aux éléments réels de la page.
+
+Continuer avec Puppeteer si nécessaire pour mieux gérer le contenu chargé dynamiquement.
+
+
+
+const puppeteer = require('puppeteer');
+
+(async () => {
+  const browser = await puppeteer.launch({ headless: true });
+  const page = await browser.newPage();
+  await page.goto('https://sky.coflnet.com/flipper');
+
+  // Attendre que la page charge
+  await page.waitForSelector('.flipper-scroll-list-wrapper');
+
+  // Scroller pour charger tous les éléments
+  for (let i = 0; i < 5; i++) {
+    await page.evaluate(() => {
+      window.scrollBy(0, window.innerHeight);
+    });
+    await page.waitForTimeout(2000); // Attendre un peu pour que les nouveaux éléments se chargent
+  }
+
+  // Récupérer les éléments de la page
+  const items = await page.$$eval('.card', cards => {
+    return cards.map(card => {
+      const name = card.querySelector('.name')?.innerText;
+      const buyPrice = card.querySelector('.cost')?.innerText.replace(',', '').replace(' Coins', '');
+      const sellPrice = card.querySelector('.target_price')?.innerText.replace(',', '').replace(' Coins', '');
+      const volume = card.querySelector('.volume')?.innerText.replace('~', '').replace(' per day', '');
+      const link = card.querySelector('.view-auction')?.href;
+      return { name, buyPrice, sellPrice, volume, link };
+    });
+  });
+
+  console.log(`Nombre d'items trouvés : ${items.length}`);
+  items.forEach((item, index) => {
+    console.log(`Item ${index + 1} :`, item);
+  });
+
+  await browser.close();
+})();
