@@ -6,4 +6,4 @@ Objective: Scrape data from the website sky.coflnet.com/flipper to retrieve item
 
 
 The script 1 is searching items with different parameters and copying the ingame link awction. 
-The script 2 is pasting the link in the game and buying (id it works) the awction. 
+The script 2 is pasting the link in the game and buying the awction(if it works and if the awction is not already buy) 
